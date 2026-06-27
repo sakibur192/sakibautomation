@@ -1,14 +1,36 @@
-2026/06/28-00:02:10.468 1e8c Reusing MANIFEST C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/06/28-00:02:10.469 1e8c Recovering log #232
-2026/06/28-00:02:10.469 1e8c Reusing old log C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/000232.log 
-2026/06/28-00:02:10.470 1e8c Delete type=2 #230
-2026/06/28-00:02:10.970 2360 Level-0 table #237: started
-2026/06/28-00:02:11.030 2360 Level-0 table #237: 2063 bytes OK
-2026/06/28-00:02:11.112 2360 Delete type=0 #232
-2026/06/28-00:02:11.112 38e4 Manual compaction at level-0 from '\x00F\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00G\x00\x00\x00' @ 0 : 0; will stop at '\x00F\x00\x00\x05' @ 3196 : 1
-2026/06/28-00:02:11.112 38e4 Compacting 1@0 + 1@1 files
-2026/06/28-00:02:11.171 38e4 Generated table #238@0: 132 keys, 2711 bytes
-2026/06/28-00:02:11.171 38e4 Compacted 1@0 + 1@1 files => 2711 bytes
-2026/06/28-00:02:11.305 38e4 compacted to: files[ 0 1 1 0 0 0 0 ]
-2026/06/28-00:02:11.305 38e4 Delete type=2 #237
-2026/06/28-00:02:11.305 38e4 Manual compaction at level-0 from '\x00F\x00\x00\x05' @ 3196 : 1 .. '\x00G\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/06/28-02:08:12.734 2258 Reusing MANIFEST C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/28-02:08:12.762 2258 Recovering log #236
+2026/06/28-02:08:12.762 2258 Reusing old log C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/000236.log 
+2026/06/28-02:08:12.762 2258 Delete type=2 #234
+2026/06/28-02:08:13.692 1ed8 Level-0 table #241: started
+2026/06/28-02:08:13.792 1ed8 Level-0 table #241: 2063 bytes OK
+2026/06/28-02:08:13.821 1ed8 Delete type=0 #236
+2026/06/28-02:08:13.822 1268 Manual compaction at level-0 from '\x00G\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00H\x00\x00\x00' @ 0 : 0; will stop at '\x00G\x00\x00\x05' @ 3239 : 1
+2026/06/28-02:08:13.822 1268 Compacting 1@0 + 1@1 files
+2026/06/28-02:08:13.861 1268 Generated table #242@0: 132 keys, 2711 bytes
+2026/06/28-02:08:13.862 1268 Compacted 1@0 + 1@1 files => 2711 bytes
+2026/06/28-02:08:13.879 1268 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/28-02:08:13.879 1268 Delete type=2 #241
+2026/06/28-02:08:13.880 1268 Manual compaction at level-0 from '\x00G\x00\x00\x05' @ 3239 : 1 .. '\x00H\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/06/28-02:08:16.265 2258 Level-0 table #244: started
+2026/06/28-02:08:16.338 2258 Level-0 table #244: 2068 bytes OK
+2026/06/28-02:08:16.354 2258 Delete type=2 #238
+2026/06/28-02:08:16.354 2258 Delete type=0 #240
+2026/06/28-02:08:16.355 1ed8 Manual compaction at level-0 from '\x00H\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00I\x00\x00\x00' @ 0 : 0; will stop at '\x00H\x00\x00\x05' @ 3282 : 1
+2026/06/28-02:08:16.355 1ed8 Compacting 1@0 + 1@1 files
+2026/06/28-02:08:16.399 1ed8 Generated table #245@0: 132 keys, 2709 bytes
+2026/06/28-02:08:16.399 1ed8 Compacted 1@0 + 1@1 files => 2709 bytes
+2026/06/28-02:08:16.455 1ed8 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/28-02:08:16.456 1ed8 Delete type=2 #244
+2026/06/28-02:08:16.456 1268 Manual compaction at level-0 from '\x00H\x00\x00\x05' @ 3282 : 1 .. '\x00I\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/06/28-02:08:16.513 1ed8 Level-0 table #247: started
+2026/06/28-02:08:16.603 1ed8 Level-0 table #247: 2068 bytes OK
+2026/06/28-02:08:16.630 1ed8 Delete type=2 #242
+2026/06/28-02:08:16.630 1ed8 Delete type=0 #243
+2026/06/28-02:08:16.631 1268 Manual compaction at level-0 from '\x00I\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00J\x00\x00\x00' @ 0 : 0; will stop at '\x00I\x00\x00\x05' @ 3315 : 1
+2026/06/28-02:08:16.631 1268 Compacting 1@0 + 1@1 files
+2026/06/28-02:08:16.659 1268 Generated table #248@0: 132 keys, 2716 bytes
+2026/06/28-02:08:16.659 1268 Compacted 1@0 + 1@1 files => 2716 bytes
+2026/06/28-02:08:16.679 1268 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/28-02:08:16.680 1268 Delete type=2 #247
+2026/06/28-02:08:16.681 1268 Manual compaction at level-0 from '\x00I\x00\x00\x05' @ 3315 : 1 .. '\x00J\x00\x00\x00' @ 0 : 0; will stop at (end)
