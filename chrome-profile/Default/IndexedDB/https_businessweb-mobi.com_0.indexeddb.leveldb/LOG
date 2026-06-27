@@ -1,25 +1,14 @@
-2026/06/27-17:23:05.750 3804 Reusing MANIFEST C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/MANIFEST-000001
-2026/06/27-17:23:05.750 3804 Recovering log #141
-2026/06/27-17:23:05.767 3804 Reusing old log C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/000141.log 
-2026/06/27-17:23:05.768 3804 Delete type=2 #140
-2026/06/27-17:23:06.910 2988 Level-0 table #146: started
-2026/06/27-17:23:06.992 2988 Level-0 table #146: 3803 bytes OK
-2026/06/27-17:23:07.464 2988 Delete type=0 #141
-2026/06/27-17:23:07.464 3d28 Manual compaction at level-0 from '\x00-\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00.\x00\x00\x00' @ 0 : 0; will stop at '\x00-\x00\x00\x05' @ 1917 : 1
-2026/06/27-17:23:07.482 3d28 Compacting 1@0 + 1@1 files
-2026/06/27-17:23:07.887 3d28 Generated table #147@0: 109 keys, 2516 bytes
-2026/06/27-17:23:07.887 3d28 Compacted 1@0 + 1@1 files => 2516 bytes
-2026/06/27-17:23:07.924 3d28 compacted to: files[ 0 1 1 0 0 0 0 ]
-2026/06/27-17:23:07.925 3d28 Delete type=2 #146
-2026/06/27-17:23:07.925 2c20 Manual compaction at level-0 from '\x00-\x00\x00\x05' @ 1917 : 1 .. '\x00.\x00\x00\x00' @ 0 : 0; will stop at (end)
-2026/06/27-17:23:07.926 2c20 Level-0 table #149: started
-2026/06/27-17:23:08.304 2c20 Level-0 table #149: 4636 bytes OK
-2026/06/27-17:23:08.582 2c20 Delete type=2 #143
-2026/06/27-17:23:08.582 2c20 Delete type=0 #145
-2026/06/27-17:23:08.583 2c20 Manual compaction at level-0 from '\x00.\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00/\x00\x00\x00' @ 0 : 0; will stop at '\x00.\x00\x00\x05' @ 1970 : 1
-2026/06/27-17:23:08.583 2c20 Compacting 1@0 + 1@1 files
-2026/06/27-17:23:09.307 2c20 Generated table #150@0: 122 keys, 3966 bytes
-2026/06/27-17:23:09.307 2c20 Compacted 1@0 + 1@1 files => 3966 bytes
-2026/06/27-17:23:09.957 2c20 compacted to: files[ 0 1 1 0 0 0 0 ]
-2026/06/27-17:23:09.957 2c20 Delete type=2 #149
-2026/06/27-17:23:09.958 2c20 Manual compaction at level-0 from '\x00.\x00\x00\x05' @ 1970 : 1 .. '\x00/\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/06/28-00:02:10.468 1e8c Reusing MANIFEST C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/28-00:02:10.469 1e8c Recovering log #232
+2026/06/28-00:02:10.469 1e8c Reusing old log C:\Users\Sakibur Rahman\Desktop\browser\chrome-profile\Default\IndexedDB\https_businessweb-mobi.com_0.indexeddb.leveldb/000232.log 
+2026/06/28-00:02:10.470 1e8c Delete type=2 #230
+2026/06/28-00:02:10.970 2360 Level-0 table #237: started
+2026/06/28-00:02:11.030 2360 Level-0 table #237: 2063 bytes OK
+2026/06/28-00:02:11.112 2360 Delete type=0 #232
+2026/06/28-00:02:11.112 38e4 Manual compaction at level-0 from '\x00F\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00G\x00\x00\x00' @ 0 : 0; will stop at '\x00F\x00\x00\x05' @ 3196 : 1
+2026/06/28-00:02:11.112 38e4 Compacting 1@0 + 1@1 files
+2026/06/28-00:02:11.171 38e4 Generated table #238@0: 132 keys, 2711 bytes
+2026/06/28-00:02:11.171 38e4 Compacted 1@0 + 1@1 files => 2711 bytes
+2026/06/28-00:02:11.305 38e4 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/06/28-00:02:11.305 38e4 Delete type=2 #237
+2026/06/28-00:02:11.305 38e4 Manual compaction at level-0 from '\x00F\x00\x00\x05' @ 3196 : 1 .. '\x00G\x00\x00\x00' @ 0 : 0; will stop at (end)

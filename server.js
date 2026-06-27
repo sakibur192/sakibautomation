@@ -12,7 +12,9 @@ const app = express();
 
 app.use(express.json());
 
-
+let meState = "LOGIN";
+let otpAttempts = 0;
+const MAX_OTP_ATTEMPTS = 3;
 
 const queue = [];
 let processing = false;
@@ -105,11 +107,682 @@ connectDB();
 
 
 
+app.post("/me/restart", async (req, res) => {
+
+    try {
+
+        const page = getPage();
+
+        await page.goto(
+            "https://businessweb-mobi.com/",
+            {
+                waitUntil: "domcontentloaded"
+            }
+        );
+
+        meState = "LOGIN";
+        otpAttempts = 0;
+
+        res.redirect("/me");
+
+    } catch (err) {
+
+        res.send(err.message);
+
+    }
+
+});
+
+app.post("/me/reset", async (req, res) => {
+
+    const page = getPage();
+
+    meState = "LOGIN";
+    otpAttempts = 0;
+
+    await page.goto(
+        "https://businessweb-mobi.com/auth/login",
+        {
+            waitUntil: "networkidle"
+        }
+    );
+
+    res.redirect("/me");
+});
 
 
+app.get("/me", async (req, res) => {
 
+    const page = getPage();
 
+    const screenshot = await page.screenshot({
+        type: "png",
+        fullPage: true
+    });
 
+    const image = screenshot.toString("base64");
+
+    let form = "";
+
+    if (meState === "LOGIN") {
+
+        form = `
+
+            <h3>Login</h3>
+
+            <form method="POST" action="/me">
+
+                <input
+                    name="username"
+                    placeholder="Username"
+                    required
+                >
+
+                <br><br>
+
+                <input
+                    name="password"
+                    type="password"
+                    placeholder="Password"
+                    required
+                >
+
+                <br><br>
+
+                <button type="submit">
+                    Login
+                </button>
+
+            </form>
+
+        `;
+
+    }
+    else if (meState === "OTP") {
+
+        form = `
+
+            <h3>
+                OTP Verification
+                (${otpAttempts}/${MAX_OTP_ATTEMPTS})
+            </h3>
+
+            <form method="POST" action="/me">
+
+                <input
+                    name="otp"
+                    placeholder="2FA Code"
+                    required
+                >
+
+                <br><br>
+
+                <button type="submit">
+                    Verify
+                </button>
+
+            </form>
+
+        `;
+
+    }
+    else {
+
+        form = `
+
+            <h2 style="color:green">
+                Logged In Successfully
+            </h2>
+
+        `;
+
+    }
+
+    res.send(`
+
+        <html>
+
+        <body>
+
+            <h2>Browser Screen</h2>
+
+            <img
+                src="data:image/png;base64,${image}"
+                style="width:100%;max-width:1200px"
+            >
+
+            <hr>
+
+            ${form}
+
+            <hr>
+
+            <form method="POST" action="/me/reset">
+
+                <button
+                    type="submit"
+                    style="
+                        background:red;
+                        color:white;
+                        padding:10px;
+                    "
+                >
+                    Start From Beginning
+                </button>
+
+            </form>
+
+        </body>
+
+        </html>
+
+    `);
+
+});
+
+app.post(
+    "/me",
+    express.urlencoded({
+        extended: true
+    }),
+    async (req, res) => {
+
+        try {
+
+            const page = getPage();
+
+            //------------------------------------
+            // LOGIN STAGE
+            //------------------------------------
+
+            if (meState === "LOGIN") {
+
+                const {
+                    username,
+                    password
+                } = req.body;
+
+                if (!username || !password) {
+                    return res.redirect("/me");
+                }
+
+                //------------------------------------
+                // Username
+                //------------------------------------
+
+                const usernameInput =
+                    page.locator("#log");
+
+                await usernameInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await usernameInput.click();
+                await usernameInput.press("Control+A");
+                await usernameInput.press("Backspace");
+                await usernameInput.fill(username);
+
+                //------------------------------------
+                // Password
+                //------------------------------------
+
+                const passwordInput =
+                    page.locator("#pass");
+
+                await passwordInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await passwordInput.click();
+                await passwordInput.press("Control+A");
+                await passwordInput.press("Backspace");
+                await passwordInput.fill(password);
+
+                //------------------------------------
+                // Remember Me
+                //------------------------------------
+
+                const remember =
+                    page.locator(
+                        'input[name="rememberMe"]'
+                    );
+
+                if (!(await remember.isChecked())) {
+
+                    await remember.check();
+
+                }
+
+                //------------------------------------
+                // Login Button
+                //------------------------------------
+
+                const loginButton =
+                    page.locator(
+                        'button[data-testid="submit-button"]'
+                    ).first();
+
+                await loginButton.waitFor({
+                    state: "visible"
+                });
+
+                await loginButton.click();
+
+                //------------------------------------
+                // Wait OTP Page
+                //------------------------------------
+
+                await page.locator("#mfaCode")
+                    .waitFor({
+                        state: "visible",
+                        timeout: 30000
+                    });
+
+                meState = "OTP";
+                otpAttempts = 0;
+
+                return res.redirect("/me");
+            }
+
+            //------------------------------------
+            // OTP STAGE
+            //------------------------------------
+
+            if (meState === "OTP") {
+
+                const { otp } = req.body;
+
+                if (!otp) {
+                    return res.redirect("/me");
+                }
+
+                otpAttempts++;
+
+                //------------------------------------
+                // OTP Input
+                //------------------------------------
+
+                const otpInput =
+                    page.locator("#mfaCode");
+
+                await otpInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await otpInput.click();
+                await otpInput.press("Control+A");
+                await otpInput.press("Backspace");
+                await otpInput.fill(otp);
+
+                //------------------------------------
+                // Final Login Button
+                //------------------------------------
+
+                const finalLoginButton =
+                    page.locator(
+                        'button[data-testid="submit-button"]'
+                    ).last();
+
+                await finalLoginButton.waitFor({
+                    state: "visible"
+                });
+
+                await finalLoginButton.click();
+
+                //------------------------------------
+                // Wait
+                //------------------------------------
+
+                await page.waitForTimeout(5000);
+
+                //------------------------------------
+                // Check if OTP page still exists
+                //------------------------------------
+
+                const otpCount =
+                    await page
+                        .locator("#mfaCode")
+                        .count();
+
+                if (otpCount > 0) {
+
+                    const visible =
+                        await page
+                            .locator("#mfaCode")
+                            .isVisible()
+                            .catch(() => false);
+
+                    if (visible) {
+
+                        if (
+                            otpAttempts >=
+                            MAX_OTP_ATTEMPTS
+                        ) {
+
+                            meState = "LOGIN";
+                            otpAttempts = 0;
+
+                        }
+
+                        return res.redirect("/me");
+                    }
+                }
+
+                //------------------------------------
+                // Login Success
+                //------------------------------------
+
+                meState = "DONE";
+                otpAttempts = 0;
+
+                await saveSession();
+
+                return res.redirect("/me");
+            }
+
+            //------------------------------------
+            // DONE
+            //------------------------------------
+
+            return res.redirect("/me");
+
+        } catch (err) {
+
+            const page = getPage();
+
+            const screenshot =
+                await page.screenshot({
+                    type: "png",
+                    fullPage: true
+                });
+
+            const image =
+                screenshot.toString("base64");
+
+            res.send(`
+                <html>
+                <body>
+
+                    <h2 style="color:red">
+                        ERROR
+                    </h2>
+
+                    <pre>
+${err.stack}
+                    </pre>
+
+                    <img
+                        src="data:image/png;base64,${image}"
+                        style="width:100%"
+                    >
+
+                    <br><br>
+
+                    <a href="/me">
+                        Back
+                    </a>
+
+                </body>
+                </html>
+            `);
+        }
+    }
+);
+
+app.post(
+    "/me",
+    express.urlencoded({
+        extended: true
+    }),
+    async (req, res) => {
+
+        try {
+
+            const page = getPage();
+
+            //------------------------------------
+            // LOGIN STAGE
+            //------------------------------------
+
+            if (meState === "LOGIN") {
+
+                const {
+                    username,
+                    password
+                } = req.body;
+
+                if (!username || !password) {
+                    return res.redirect("/me");
+                }
+
+                //------------------------------------
+                // Username
+                //------------------------------------
+
+                const usernameInput =
+                    page.locator("#log");
+
+                await usernameInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await usernameInput.click();
+                await usernameInput.press("Control+A");
+                await usernameInput.press("Backspace");
+                await usernameInput.fill(username);
+
+                //------------------------------------
+                // Password
+                //------------------------------------
+
+                const passwordInput =
+                    page.locator("#pass");
+
+                await passwordInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await passwordInput.click();
+                await passwordInput.press("Control+A");
+                await passwordInput.press("Backspace");
+                await passwordInput.fill(password);
+
+                //------------------------------------
+                // Remember Me
+                //------------------------------------
+
+                const remember =
+                    page.locator(
+                        'input[name="rememberMe"]'
+                    );
+
+                if (!(await remember.isChecked())) {
+
+                    await remember.check();
+
+                }
+
+                //------------------------------------
+                // Login Button
+                //------------------------------------
+
+                const loginButton =
+                    page.locator(
+                        'button[data-testid="submit-button"]'
+                    ).first();
+
+                await loginButton.waitFor({
+                    state: "visible"
+                });
+
+                await loginButton.click();
+
+                //------------------------------------
+                // Wait OTP Page
+                //------------------------------------
+
+                await page.locator("#mfaCode")
+                    .waitFor({
+                        state: "visible",
+                        timeout: 30000
+                    });
+
+                meState = "OTP";
+                otpAttempts = 0;
+
+                return res.redirect("/me");
+            }
+
+            //------------------------------------
+            // OTP STAGE
+            //------------------------------------
+
+            if (meState === "OTP") {
+
+                const { otp } = req.body;
+
+                if (!otp) {
+                    return res.redirect("/me");
+                }
+
+                otpAttempts++;
+
+                //------------------------------------
+                // OTP Input
+                //------------------------------------
+
+                const otpInput =
+                    page.locator("#mfaCode");
+
+                await otpInput.waitFor({
+                    state: "visible",
+                    timeout: 30000
+                });
+
+                await otpInput.click();
+                await otpInput.press("Control+A");
+                await otpInput.press("Backspace");
+                await otpInput.fill(otp);
+
+                //------------------------------------
+                // Final Login Button
+                //------------------------------------
+
+                const finalLoginButton =
+                    page.locator(
+                        'button[data-testid="submit-button"]'
+                    ).last();
+
+                await finalLoginButton.waitFor({
+                    state: "visible"
+                });
+
+                await finalLoginButton.click();
+
+                //------------------------------------
+                // Wait
+                //------------------------------------
+
+                await page.waitForTimeout(5000);
+
+                //------------------------------------
+                // Check if OTP page still exists
+                //------------------------------------
+
+                const otpCount =
+                    await page
+                        .locator("#mfaCode")
+                        .count();
+
+                if (otpCount > 0) {
+
+                    const visible =
+                        await page
+                            .locator("#mfaCode")
+                            .isVisible()
+                            .catch(() => false);
+
+                    if (visible) {
+
+                        if (
+                            otpAttempts >=
+                            MAX_OTP_ATTEMPTS
+                        ) {
+
+                            meState = "LOGIN";
+                            otpAttempts = 0;
+
+                        }
+
+                        return res.redirect("/me");
+                    }
+                }
+
+                //------------------------------------
+                // Login Success
+                //------------------------------------
+
+                meState = "DONE";
+                otpAttempts = 0;
+
+                await saveSession();
+
+                return res.redirect("/me");
+            }
+
+            //------------------------------------
+            // DONE
+            //------------------------------------
+
+            return res.redirect("/me");
+
+        } catch (err) {
+
+            const page = getPage();
+
+            const screenshot =
+                await page.screenshot({
+                    type: "png",
+                    fullPage: true
+                });
+
+            const image =
+                screenshot.toString("base64");
+
+            res.send(`
+                <html>
+                <body>
+
+                    <h2 style="color:red">
+                        ERROR
+                    </h2>
+
+                    <pre>
+${err.stack}
+                    </pre>
+
+                    <img
+                        src="data:image/png;base64,${image}"
+                        style="width:100%"
+                    >
+
+                    <br><br>
+
+                    <a href="/me">
+                        Back
+                    </a>
+
+                </body>
+                </html>
+            `);
+        }
+    }
+);
 
 
 
