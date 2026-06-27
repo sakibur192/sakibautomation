@@ -1029,6 +1029,9 @@ async function deposit(webUserId, amount) {
                     // Open Deposit Modal
                     //----------------------------------------------------
 
+await page.reload();
+    await page.waitForLoadState("domcontentloaded");
+
                     console.log("[1] Clicking Deposit button...");
 
                     await page.getByTestId("deposit-show-button").click();
@@ -1474,7 +1477,8 @@ async function withdraw(withdrawCode) {
         //------------------------------------------------
         // Open Withdraw Modal
         //------------------------------------------------
-
+await page.reload();
+    await page.waitForLoadState("domcontentloaded");
         console.log("[1] Open Withdraw");
 
         await page.getByTestId("withdraw-show-button").click();
