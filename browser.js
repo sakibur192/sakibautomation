@@ -28,7 +28,11 @@ async function startBrowser() {
             viewport: null,
 
             args: [
-                "--start-maximized"
+                "--start-maximized",
+                "--no-sandbox",               // Bypasses the OS security model inside Docker/VPS environments
+                "--disable-setuid-sandbox",    // Prevents permission issues with the browser sandbox
+                "--disable-dev-shm-usage",     // CRITICAL: Forces Chrome to write memory to disk instead of /dev/shm (RAM)
+                "--disable-gpu"                // Stops Chrome from trying to initialize nonexistent hardware graphics cards
             ],
 
             permissions: [
