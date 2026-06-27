@@ -1131,6 +1131,38 @@ await page.reload();
 
             await depositButton.click();
 
+
+
+
+
+try {
+            // Give the app up to 3 seconds to render an error toast if something went wrong
+            const errorToastSelector = 'h4.custom-toast__title[data-v-38b0b119]';
+            
+            await page.waitForSelector(errorToastSelector, { 
+                state: 'attached', 
+                timeout: 3000 
+            });
+
+            // If the code reaches this line, the error toast WAS found.
+            console.log("========== FAILED (Toast Error Detected) ==========");
+            return {
+                success: false,
+                reason: "Error toast appeared on page."
+            };
+
+        } catch (toastTimeoutError) {
+            // If it times out, no error toast appeared. This means it's a genuine success!
+            console.log("No error toast detected. Proceeding...");
+        }
+
+
+
+
+
+
+
+
                     console.log("========== SUCCESS ==========");
 
                     return {
@@ -1144,10 +1176,10 @@ await page.reload();
 
                     try {
 
-                        await page.screenshot({
-                            path: `deposit-error-${Date.now()}.png`,
-                            fullPage: true
-                        });
+                        // await page.screenshot({
+                        //     path: `deposit-error-${Date.now()}.png`,
+                        //     fullPage: true
+                        // });
 
                         console.log("Screenshot saved.");
 
