@@ -569,49 +569,86 @@ ${err.stack}
 
 
 
+// app.post("/me/logout", async (req, res) => {
+
+//     try {
+
+//         const page = getPage();
+
+//         const logoutButton =
+//             page.locator(
+//                 "button.nav-item--logout"
+//             );
+
+//         await logoutButton.waitFor({
+//             state: "visible",
+//             timeout: 10000
+//         });
+
+//         await logoutButton.click();
+
+//         //------------------------------------
+//         // Reset local state
+//         //------------------------------------
+
+//         meState = "LOGIN";
+//         otpAttempts = 0;
+
+//         //------------------------------------
+//         // Wait a little
+//         //------------------------------------
+
+//         await page.waitForTimeout(3000);
+
+//         return res.redirect("/me");
+
+//     } catch (err) {
+
+//         console.error(err);
+
+//         return res.redirect("/me");
+
+//     }
+
+// });
 app.post("/me/logout", async (req, res) => {
-
     try {
-
         const page = getPage();
 
-        const logoutButton =
-            page.locator(
-                "button.nav-item--logout"
-            );
-
+        // 1. Click the initial navigation logout button
+        const logoutButton = page.locator("button.nav-item--logout");
         await logoutButton.waitFor({
             state: "visible",
             timeout: 10000
         });
-
         await logoutButton.click();
+
+        // 2. Click the confirmation modal button
+        // We use the exact class from your HTML snippet
+        const confirmButton = page.locator("button.logout-modal__confirm--danger");
+        await confirmButton.waitFor({
+            state: "visible",
+            timeout: 5000 // A short timeout since modals usually appear instantly
+        });
+        await confirmButton.click();
 
         //------------------------------------
         // Reset local state
         //------------------------------------
-
         meState = "LOGIN";
         otpAttempts = 0;
 
         //------------------------------------
-        // Wait a little
+        // Wait a little for the session to clear
         //------------------------------------
-
         await page.waitForTimeout(3000);
-
         return res.redirect("/me");
 
     } catch (err) {
-
-        console.error(err);
-
+        console.error("Logout process encountered an error:", err);
         return res.redirect("/me");
-
     }
-
 });
-
 app.get("/", (req, res) => {
     res.send("Automation Running");
 });
@@ -2229,13 +2266,32 @@ app.post("/withdraw", async (req, res) => {
     const HARDCODED_AUTH_TOKEN = "your-secure-static-token-here";
 
     try {
-        // 2. Extract token from standard "Authorization: Bearer <token>" format, or fall back to raw string
+  
+
+
+
+
+
+
+
+
+
+
         const authHeader = req.headers.authorization;
         let incomingToken = authHeader;
 
         if (authHeader && authHeader.startsWith("Bearer ")) {
-            incomingToken = authHeader.substring(7); // Extract just the token string after "Bearer "
+            incomingToken = authHeader.substring(7);
         }
+
+
+
+
+
+
+
+
+
 
         // 3. Authorization Guard Check
         if (!incomingToken || incomingToken !== HARDCODED_AUTH_TOKEN) {
