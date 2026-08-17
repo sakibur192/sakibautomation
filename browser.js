@@ -76,6 +76,58 @@ async function startBrowser() {
     return page;
 }
 
+
+
+
+
+
+
+
+
+
+async function restartBrowser() {
+    console.log("================================");
+    console.log("RESTARTING BROWSER...");
+    console.log("================================");
+
+    try {
+        // Close existing browser
+        if (context) {
+            try {
+                await context.close();
+            } catch (err) {
+                console.log("Error closing old browser:", err.message);
+            }
+        }
+
+        // Clear references
+        context = null;
+        page = null;
+
+        // Small delay before launching again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Start fresh browser
+        const newPage = await startBrowser();
+
+        console.log("================================");
+        console.log("BROWSER RESTARTED SUCCESSFULLY");
+        console.log("================================");
+
+        return newPage;
+
+    } catch (err) {
+        console.error("BROWSER RESTART FAILED:", err);
+
+        context = null;
+        page = null;
+
+        throw err;
+    }
+}
+
+
+
 function getPage() {
     return page;
 }
@@ -87,8 +139,10 @@ function getContext() {
 
 module.exports = {
     startBrowser,
+      restartBrowser,
     getPage,
     getContext,
     getBusyStatus,
-    setBusyStatus
+    setBusyStatus,
+  
 };

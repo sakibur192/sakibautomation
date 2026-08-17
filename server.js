@@ -2,6 +2,7 @@ const express = require("express");
 
 const {
     startBrowser,
+     restartBrowser,
     saveSession,
     getPage,
      getContext
@@ -1939,6 +1940,51 @@ await page.reload();
         throw err;
     }
 }
+
+
+
+
+
+
+
+app.post("/restart-browser", async (req, res) => {
+
+    try {
+
+        if (getBusyStatus()) {
+            return res.status(409).json({
+                success: false,
+                error: "Automation is currently busy"
+            });
+        }
+
+        console.log("Browser restart requested...");
+
+        await restartBrowser();
+
+        res.json({
+            success: true,
+            message: "Browser restarted successfully"
+        });
+
+    } catch (err) {
+
+        console.error("Browser restart error:", err);
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
+
+
+
+
+
+
 
 
 // app.post("/withdraw", async (req, res) => {
