@@ -1952,12 +1952,7 @@ app.post("/restart-browser", async (req, res) => {
 
     try {
 
-        if (getBusyStatus()) {
-            return res.status(409).json({
-                success: false,
-                error: "Automation is currently busy"
-            });
-        }
+       
 
         console.log("Browser restart requested...");
 
