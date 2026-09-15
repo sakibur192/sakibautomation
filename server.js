@@ -1239,6 +1239,10 @@ async function deposit(webUserId, amount) {
 
     const page = getPage();
 
+    // Make all Playwright action/locator timeouts 60 seconds
+    page.setDefaultTimeout(60000);
+    page.setDefaultNavigationTimeout(60000);
+
     console.log("\n==============================");
     console.log("START DEPOSIT");
     console.log("User:", webUserId);
@@ -1270,7 +1274,7 @@ async function deposit(webUserId, amount) {
 
         await userInput.waitFor({
             state: "visible",
-            timeout: 30000
+            timeout: 60000
         });
 
         console.log("[3] Filling User ID...");
@@ -1301,12 +1305,15 @@ async function deposit(webUserId, amount) {
         const nextButton = page.getByTestId("deposit-search-user-submit");
 
         await nextButton.waitFor({
-            state: "visible"
+            state: "visible",
+            timeout: 60000
         });
 
         await Promise.all([
             nextButton.click(),
-            page.waitForLoadState("networkidle").catch(() => {})
+            page.waitForLoadState("networkidle", {
+                timeout: 60000
+            }).catch(() => {})
         ]);
 
         console.log("[5] Waiting for Amount input...");
@@ -1319,7 +1326,7 @@ async function deposit(webUserId, amount) {
 
         await amountInput.waitFor({
             state: "visible",
-            timeout: 30000
+            timeout: 60000
         });
 
         console.log("[6] Filling Amount...");
@@ -1344,7 +1351,8 @@ async function deposit(webUserId, amount) {
         const depositModal = page.getByTestId("modal-deposit-amount");
 
         await depositModal.waitFor({
-            state: "visible"
+            state: "visible",
+            timeout: 60000
         });
 
         const depositButton = depositModal.getByRole("button", {
@@ -1356,25 +1364,38 @@ async function deposit(webUserId, amount) {
         //----------------------------------------------------
         // Look for Error Toast vs. Success Path
         //----------------------------------------------------
+
         console.log("[8] Checking transaction outcome...");
 
-        // Give the network and UI animations a clear moment to settle down
-        await page.waitForTimeout(2000);
+        // Wait maximum 60 seconds for transaction result
+        await page.waitForTimeout(60000);
 
-        // Explicitly check if a visible error message toast is on screen right now
-        const errorToastSelector = 'h4.custom-toast__title[data-v-38b0b119]';
-        const activeErrorToast = page.locator(errorToastSelector).filter({ hasText: 'Error' });
-        const isErrorVisible = await activeErrorToast.isVisible().catch(() => false);
+        const errorToastSelector =
+            'h4.custom-toast__title[data-v-38b0b119]';
+
+        const activeErrorToast = page
+            .locator(errorToastSelector)
+            .filter({ hasText: "Error" });
+
+        const isErrorVisible =
+            await activeErrorToast.isVisible().catch(() => false);
 
         if (isErrorVisible) {
-            console.log("========== FAILED (Toast Error Confirmed) ==========");
+
+            console.log(
+                "========== FAILED (Toast Error Confirmed) =========="
+            );
+
             return {
                 success: false,
                 reason: "Error toast appeared on page."
             };
         }
 
-        console.log("No active error toast visible. Verification clear.");
+        console.log(
+            "No active error toast visible. Verification clear."
+        );
+
         console.log("========== SUCCESS ==========");
 
         return {
@@ -1387,16 +1408,178 @@ async function deposit(webUserId, amount) {
         console.log(err);
 
         try {
-            // await page.screenshot({
-            //     path: `deposit-error-${Date.now()}.png`,
-            //     fullPage: true
-            // });
             console.log("Screenshot saved.");
         } catch {}
 
         throw err;
     }
 }
+
+
+
+//below is the last working version when 60000 is not applied
+// async function deposit(webUserId, amount) {
+
+//     const page = getPage();
+
+//     console.log("\n==============================");
+//     console.log("START DEPOSIT");
+//     console.log("User:", webUserId);
+//     console.log("Amount:", amount);
+//     console.log("==============================");
+
+//     try {
+
+//         //----------------------------------------------------
+//         // Open Deposit Modal
+//         //----------------------------------------------------
+
+//         await page.reload();
+//         await page.waitForLoadState("domcontentloaded");
+
+//         console.log("[1] Clicking Deposit button...");
+
+//         await page.getByTestId("deposit-show-button").click();
+
+//         //----------------------------------------------------
+//         // Wait for User ID Input
+//         //----------------------------------------------------
+
+//         console.log("[2] Waiting for User ID input...");
+
+//         const userInput = page
+//             .locator('div[data-testid="deposit-search-user-input"]')
+//             .locator("input#client_id");
+
+//         await userInput.waitFor({
+//             state: "visible",
+//             timeout: 60000
+//         });
+
+//         console.log("[3] Filling User ID...");
+
+//         await userInput.click();
+
+//         await userInput.press("Control+A");
+//         await userInput.press("Backspace");
+
+//         await userInput.fill(String(webUserId));
+
+//         const typedId = await userInput.inputValue();
+
+//         console.log("Typed User ID =", typedId);
+
+//         if (typedId !== String(webUserId)) {
+//             throw new Error(
+//                 `User ID mismatch. Expected ${webUserId}, Got ${typedId}`
+//             );
+//         }
+
+//         //----------------------------------------------------
+//         // Click Next
+//         //----------------------------------------------------
+
+//         console.log("[4] Clicking Next...");
+
+//         const nextButton = page.getByTestId("deposit-search-user-submit");
+
+//         await nextButton.waitFor({
+//             state: "visible"
+//         });
+
+//         await Promise.all([
+//             nextButton.click(),
+//             page.waitForLoadState("networkidle").catch(() => {})
+//         ]);
+
+//         console.log("[5] Waiting for Amount input...");
+
+//         //----------------------------------------------------
+//         // Wait Amount Input
+//         //----------------------------------------------------
+
+//         const amountInput = page.locator("input#amount");
+
+//         await amountInput.waitFor({
+//             state: "visible",
+//             timeout: 60000
+//         });
+
+//         console.log("[6] Filling Amount...");
+
+//         await amountInput.click();
+
+//         await amountInput.press("Control+A");
+//         await amountInput.press("Backspace");
+
+//         await amountInput.fill(String(amount));
+
+//         const typedAmount = await amountInput.inputValue();
+
+//         console.log("Typed Amount =", typedAmount);
+
+//         //----------------------------------------------------
+//         // Deposit Button
+//         //----------------------------------------------------
+
+//         console.log("[7] Waiting Deposit button...");
+
+//         const depositModal = page.getByTestId("modal-deposit-amount");
+
+//         await depositModal.waitFor({
+//             state: "visible"
+//         });
+
+//         const depositButton = depositModal.getByRole("button", {
+//             name: "Deposit"
+//         });
+
+//         await depositButton.click();
+
+//         //----------------------------------------------------
+//         // Look for Error Toast vs. Success Path
+//         //----------------------------------------------------
+//         console.log("[8] Checking transaction outcome...");
+
+//         // Give the network and UI animations a clear moment to settle down
+//         await page.waitForTimeout(30000);
+
+//         // Explicitly check if a visible error message toast is on screen right now
+//         const errorToastSelector = 'h4.custom-toast__title[data-v-38b0b119]';
+//         const activeErrorToast = page.locator(errorToastSelector).filter({ hasText: 'Error' });
+//         const isErrorVisible = await activeErrorToast.isVisible().catch(() => false);
+
+//         if (isErrorVisible) {
+//             console.log("========== FAILED (Toast Error Confirmed) ==========");
+//             return {
+//                 success: false,
+//                 reason: "Error toast appeared on page."
+//             };
+//         }
+
+//         console.log("No active error toast visible. Verification clear.");
+//         console.log("========== SUCCESS ==========");
+
+//         return {
+//             success: true
+//         };
+
+//     } catch (err) {
+
+//         console.log("========== FAILED ==========");
+//         console.log(err);
+
+//         try {
+//             // await page.screenshot({
+//             //     path: `deposit-error-${Date.now()}.png`,
+//             //     fullPage: true
+//             // });
+//             console.log("Screenshot saved.");
+//         } catch {}
+
+//         throw err;
+//     }
+// }
 
 // app.post("/deposit", async (req, res) => {
 
