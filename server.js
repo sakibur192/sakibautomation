@@ -1368,7 +1368,7 @@ async function deposit(webUserId, amount) {
         console.log("[8] Checking transaction outcome...");
 
         // Wait maximum 60 seconds for transaction result
-        await page.waitForTimeout(60000);
+        await page.waitForTimeout(2000);
 
         const errorToastSelector =
             'h4.custom-toast__title[data-v-38b0b119]';
@@ -1880,37 +1880,65 @@ async function deposit(webUserId, amount) {
 // });
 
 app.post("/deposit", async (req, res) => {
-    // 1. Define your hardcoded secret token here
+
+    // ============================================
+    // HARDCODED AUTH TOKEN
+    // ============================================
+
     const HARDCODED_AUTH_TOKEN = "your-secure-static-token-here";
 
     try {
-        // 2. Extract token from standard "Authorization: Bearer <token>" format, or fall back to raw string
+
+        // ============================================
+        // AUTHORIZATION
+        // ============================================
+
         const authHeader = req.headers.authorization;
+
         let incomingToken = authHeader;
 
         if (authHeader && authHeader.startsWith("Bearer ")) {
-            incomingToken = authHeader.substring(7); // Extract just the token string after "Bearer "
+            incomingToken = authHeader.substring(7);
         }
 
-        // 3. Authorization Guard Check
-        if (!incomingToken || incomingToken !== HARDCODED_AUTH_TOKEN) {
+        if (
+            !incomingToken ||
+            incomingToken !== HARDCODED_AUTH_TOKEN
+        ) {
             return res.status(401).json({
                 success: false,
                 error: "Unauthorized"
             });
         }
 
-        // --- Authorized! Proceed with regular logic ---
+
+        // ============================================
+        // ADD TO QUEUE
+        // ============================================
+
         const result = await addToQueue(async () => {
+
             let transactionId = null;
+
             const { webUserId, amount } = req.body;
 
+
+            // ============================================
+            // VALIDATION
+            // ============================================
+
             if (!webUserId || !amount) {
+
                 return {
                     success: false,
                     error: "webUserId and amount are required"
                 };
             }
+
+
+            // ============================================
+            // CHECK AUTOMATION SETTINGS
+            // ============================================
 
             const setting = await client.query(`
                 SELECT main_switch, sub_switch
@@ -1923,11 +1951,18 @@ app.post("/deposit", async (req, res) => {
                 setting.rows[0].main_switch !== 10 ||
                 setting.rows[0].sub_switch !== 20
             ) {
+
                 return {
                     success: false,
-                    code: 0
+                    code: 0,
+                    error: "Automation is disabled"
                 };
             }
+
+
+            // ============================================
+            // CREATE PENDING TRANSACTION
+            // ============================================
 
             const trx = await client.query(`
                 INSERT INTO transactions
@@ -1956,63 +1991,355 @@ app.post("/deposit", async (req, res) => {
 
             transactionId = trx.rows[0].id;
 
+
+            // ============================================
+            // RUN PLAYWRIGHT DEPOSIT
+            // ============================================
+
             try {
+
                 const startTime = Date.now();
 
-                await deposit(webUserId, amount);
+                console.log("");
+                console.log("================================");
+                console.log("PROCESSING DEPOSIT");
+                console.log("Transaction ID:", transactionId);
+                console.log("User:", webUserId);
+                console.log("Amount:", amount);
+                console.log("================================");
 
-                const duration = Date.now() - startTime;
+
+                // IMPORTANT:
+                // Capture the result returned by deposit()
+
+                const depositResult =
+                    await deposit(webUserId, amount);
+
+
+                const duration =
+                    Date.now() - startTime;
+
+
+                console.log(
+                    "Deposit Result:",
+                    depositResult
+                );
+
+
+                // ============================================
+                // CHECK ACTUAL DEPOSIT RESULT
+                // ============================================
+
+                if (
+                    !depositResult ||
+                    depositResult.success !== true
+                ) {
+
+                    const reason =
+                        depositResult?.reason ||
+                        depositResult?.error ||
+                        "Deposit failed";
+
+
+                    console.log(
+                        "========== DEPOSIT FAILED =========="
+                    );
+
+                    console.log(
+                        "Reason:",
+                        reason
+                    );
+
+
+                    // ========================================
+                    // UPDATE DATABASE AS FAILED
+                    // ========================================
+
+                    await client.query(`
+                        UPDATE transactions
+                        SET
+                            status = 'FAILED',
+                            duration_ms = $1,
+                            failure_reason = $2,
+                            response_json = $3,
+                            completed_at = NOW()
+                        WHERE id = $4
+                    `,
+                    [
+                        duration,
+                        reason,
+                        JSON.stringify(depositResult || {
+                            success: false,
+                            error: reason
+                        }),
+                        transactionId
+                    ]);
+
+
+                    // ========================================
+                    // RETURN FAILED RESPONSE
+                    // ========================================
+
+                    return {
+                        success: false,
+                        error: reason,
+                        transactionId
+                    };
+                }
+
+
+                // ============================================
+                // DEPOSIT SUCCESS
+                // ============================================
+
+                console.log(
+                    "========== DEPOSIT SUCCESS =========="
+                );
+
+
+                // ============================================
+                // UPDATE DATABASE AS SUCCESS
+                // ============================================
 
                 await client.query(`
                     UPDATE transactions
                     SET
-                        status='SUCCESS',
-                        duration_ms=$1,
-                        response_json=$2,
-                        completed_at=NOW()
-                    WHERE id=$3
+                        status = 'SUCCESS',
+                        duration_ms = $1,
+                        response_json = $2,
+                        completed_at = NOW()
+                    WHERE id = $3
                 `,
                 [
                     duration,
-                    JSON.stringify({
-                        success: true
-                    }),
+                    JSON.stringify(depositResult),
                     transactionId
                 ]);
 
+
+                // ============================================
+                // RETURN SUCCESS
+                // ============================================
+
                 return {
-                    success: true
+                    success: true,
+                    transactionId
                 };
 
             } catch (err) {
-                await client.query(`
-                    UPDATE transactions
-                    SET
-                        status='FAILED',
-                        failure_reason=$1,
-                        completed_at=NOW()
-                    WHERE id=$2
-                `,
-                [
-                    err.message,
-                    transactionId
-                ]);
 
-                throw err;
+                // ============================================
+                // PLAYWRIGHT / AUTOMATION ERROR
+                // ============================================
+
+                console.error(
+                    "========== DEPOSIT EXCEPTION =========="
+                );
+
+                console.error(err);
+
+
+                // ============================================
+                // UPDATE DATABASE AS FAILED
+                // ============================================
+
+                if (transactionId) {
+
+                    await client.query(`
+                        UPDATE transactions
+                        SET
+                            status = 'FAILED',
+                            failure_reason = $1,
+                            response_json = $2,
+                            completed_at = NOW()
+                        WHERE id = $3
+                    `,
+                    [
+                        err.message,
+                        JSON.stringify({
+                            success: false,
+                            error: err.message
+                        }),
+                        transactionId
+                    ]);
+                }
+
+
+                // ============================================
+                // RETURN FAILED RESULT
+                // ============================================
+
+                return {
+                    success: false,
+                    error: err.message,
+                    transactionId
+                };
             }
         });
 
-        res.json(result);
+
+        // ============================================
+        // SEND API RESPONSE
+        // ============================================
+
+        return res.json(result);
+
 
     } catch (err) {
+
+        // ============================================
+        // GLOBAL ROUTE ERROR
+        // ============================================
+
+        console.error(
+            "========== /deposit ROUTE ERROR =========="
+        );
+
         console.error(err);
 
-        res.status(500).json({
+
+        return res.status(500).json({
             success: false,
             error: err.message
         });
     }
 });
+
+//before appliying 6000
+// app.post("/deposit", async (req, res) => {
+//     // 1. Define your hardcoded secret token here
+//     const HARDCODED_AUTH_TOKEN = "your-secure-static-token-here";
+
+//     try {
+//         // 2. Extract token from standard "Authorization: Bearer <token>" format, or fall back to raw string
+//         const authHeader = req.headers.authorization;
+//         let incomingToken = authHeader;
+
+//         if (authHeader && authHeader.startsWith("Bearer ")) {
+//             incomingToken = authHeader.substring(7); // Extract just the token string after "Bearer "
+//         }
+
+//         // 3. Authorization Guard Check
+//         if (!incomingToken || incomingToken !== HARDCODED_AUTH_TOKEN) {
+//             return res.status(401).json({
+//                 success: false,
+//                 error: "Unauthorized"
+//             });
+//         }
+
+//         // --- Authorized! Proceed with regular logic ---
+//         const result = await addToQueue(async () => {
+//             let transactionId = null;
+//             const { webUserId, amount } = req.body;
+
+//             if (!webUserId || !amount) {
+//                 return {
+//                     success: false,
+//                     error: "webUserId and amount are required"
+//                 };
+//             }
+
+//             const setting = await client.query(`
+//                 SELECT main_switch, sub_switch
+//                 FROM automation_settings
+//                 WHERE id = 1
+//             `);
+
+//             if (
+//                 setting.rows.length === 0 ||
+//                 setting.rows[0].main_switch !== 10 ||
+//                 setting.rows[0].sub_switch !== 20
+//             ) {
+//                 return {
+//                     success: false,
+//                     code: 0
+//                 };
+//             }
+
+//             const trx = await client.query(`
+//                 INSERT INTO transactions
+//                 (
+//                     type,
+//                     web_user_id,
+//                     amount,
+//                     status,
+//                     request_json
+//                 )
+//                 VALUES
+//                 (
+//                     'deposit',
+//                     $1,
+//                     $2,
+//                     'PENDING',
+//                     $3
+//                 )
+//                 RETURNING id
+//             `,
+//             [
+//                 webUserId,
+//                 amount,
+//                 JSON.stringify(req.body)
+//             ]);
+
+//             transactionId = trx.rows[0].id;
+
+//             try {
+//                 const startTime = Date.now();
+
+//                 await deposit(webUserId, amount);
+
+//                 const duration = Date.now() - startTime;
+
+//                 await client.query(`
+//                     UPDATE transactions
+//                     SET
+//                         status='SUCCESS',
+//                         duration_ms=$1,
+//                         response_json=$2,
+//                         completed_at=NOW()
+//                     WHERE id=$3
+//                 `,
+//                 [
+//                     duration,
+//                     JSON.stringify({
+//                         success: true
+//                     }),
+//                     transactionId
+//                 ]);
+
+//                 return {
+//                     success: true
+//                 };
+
+//             } catch (err) {
+//                 await client.query(`
+//                     UPDATE transactions
+//                     SET
+//                         status='FAILED',
+//                         failure_reason=$1,
+//                         completed_at=NOW()
+//                     WHERE id=$2
+//                 `,
+//                 [
+//                     err.message,
+//                     transactionId
+//                 ]);
+
+//                 throw err;
+//             }
+//         });
+
+//         res.json(result);
+
+//     } catch (err) {
+//         console.error(err);
+
+//         res.status(500).json({
+//             success: false,
+//             error: err.message
+//         });
+//     }
+// });
 
 
 
